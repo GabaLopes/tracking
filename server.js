@@ -1,4 +1,4 @@
-import net from 'net';
+const net = require('net');
 
 const PORT = 1883;
 const server = net.createServer((socket) => {
