@@ -1,15 +1,35 @@
 const net = require('net');
 const amqp = require('amqplib');
+const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
 
 const RABBITMQ_URL = 'amqp://localhost';
 const QUEUE_NAME = 'tracking_queue';
 const PORT = 1883;
 
+const client = new SecretManagerServiceClient();
+const secretName = 'projects/696608906423/secrets/rabbitmq-credentials/versions/1';  // Substitua pelo seu ID do projeto e o nome do segredo
+
+async function getRabbitMQCredentials() {
+  try {
+    const [version] = await client.accessSecretVersion({ name: secretName });
+    const secretPayload = version.payload.data.toString();
+    const [username, password] = secretPayload.split(':'); // Supondo que você tenha armazenado como "usuario:senha"
+    return { username, password };
+  } catch (err) {
+    console.error('Erro ao acessar o Secret Manager:', err);
+    throw err;
+  }
+}
+
 // Conecta ao RabbitMQ
 let channel;
 async function connectRabbitMQ() {
   try {
-    const connection = await amqp.connect(RABBITMQ_URL);
+
+    const { username, password } = await getRabbitMQCredentials();
+    const RABBITMQ_URL_WITH_CREDENTIALS = `amqp://${username}:${password}@localhost`;  // Substitua 'localhost' com seu servidor RabbitMQ
+
+    const connection = await amqp.connect(RABBITMQ_URL_WITH_CREDENTIALS);
     channel = await connection.createChannel();
     await channel.assertQueue(QUEUE_NAME, { durable: true });
     console.log('Conectado ao RabbitMQ e fila criada');
