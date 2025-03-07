@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "amqplib": "^0.10.5",
+    "axios": "^1.8.1",
+    "firebase-admin": "^13.2.0",
+    "net": "^1.0.2"
+  }
+}
